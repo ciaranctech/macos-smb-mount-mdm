@@ -11,7 +11,7 @@
 # - Optional UI customization (Desktop link, Finder sidebar, Dock)
 # - Deterministic exit codes and structured result summary
 #
-# Author: Ciaran C / Claw workflow
+# Author: Ciaran C
 ################################################################################
 
 set -u
