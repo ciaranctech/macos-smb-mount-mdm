@@ -39,6 +39,8 @@ MYSIDES_ALT_TARGET="/opt/homebrew/bin/mysides"
 JAMF_DOWNLOADS="/Library/Application Support/JAMF/Downloads"
 MYSIDES_PKG="${JAMF_DOWNLOADS}/mysides.pkg"
 MYSIDES_CACHED_BIN="${JAMF_DOWNLOADS}/mysides"
+MYSIDES_PKG_URL="https://github.com/mosen/mysides/releases/download/v1.0.1/mysides-1.0.1.pkg"
+MYSIDES_TMP_PKG="/private/tmp/mysides-1.0.1.pkg"
 
 # Behavior flags
 INTERACTIVE_MODE="false"           # true|false (default false for MDM)
@@ -165,14 +167,27 @@ install_mysides() {
   /bin/mkdir -p "/usr/local/bin"
 
   if [[ -f "$MYSIDES_PKG" ]]; then
+    log "Installing mysides from Jamf-cached package: ${MYSIDES_PKG}"
     /usr/sbin/installer -pkg "$MYSIDES_PKG" -target / >/dev/null 2>&1 || return 1
   elif [[ -f "$MYSIDES_CACHED_BIN" ]]; then
+    log "Installing mysides from Jamf-cached binary: ${MYSIDES_CACHED_BIN}"
     /bin/cp "$MYSIDES_CACHED_BIN" "$MYSIDES_TARGET" || return 1
     /usr/sbin/chown root:wheel "$MYSIDES_TARGET"
     /bin/chmod 755 "$MYSIDES_TARGET"
   else
-    warn "No mysides package/binary found under Jamf Downloads."
-    return 1
+    warn "No mysides package/binary found under Jamf Downloads; attempting direct package download."
+    /bin/rm -f "$MYSIDES_TMP_PKG"
+    if ! /usr/bin/curl -fL --connect-timeout 10 --retry 2 --retry-delay 1 -o "$MYSIDES_TMP_PKG" "$MYSIDES_PKG_URL" >/dev/null 2>&1; then
+      warn "Direct mysides package download failed."
+      return 1
+    fi
+
+    if ! /usr/sbin/installer -pkg "$MYSIDES_TMP_PKG" -target / >/dev/null 2>&1; then
+      warn "mysides package install from downloaded pkg failed."
+      /bin/rm -f "$MYSIDES_TMP_PKG"
+      return 1
+    fi
+    /bin/rm -f "$MYSIDES_TMP_PKG"
   fi
 
   current="$(find_mysides || true)"
