@@ -10,14 +10,14 @@ Current release: **v1.0.0**
 
 ## Overview
 
-This project provides a safer and more deterministic SMB mount workflow for managed macOS devices.
+This project provides a deterministic and security-conscious SMB mount workflow for managed macOS devices.
 
 Key goals:
 - **MDM-safe defaults** (non-interactive by default)
 - **Clear exit codes** for policy/reporting pipelines
 - **Idempotent behavior** for repeated policy runs
 - **Security-conscious logging** (no credential logging)
-- **Optional GUI customization** only when a GUI user is present
+- **Optional GUI customization** only when required
 
 ---
 
@@ -28,6 +28,10 @@ Key goals:
 - Defaults to cached/SSO credential attempt first.
 - Optional interactive password fallback (`--interactive`) for Self Service/helpdesk scenarios.
 - Optional Finder/Dock/Desktop customization.
+- Automatic `mysides` installation support:
+  - existing binary (`/usr/local/bin` or `/opt/homebrew/bin`)
+  - Jamf cached package/binary
+  - direct package fallback download when cache is unavailable
 - Structured log output + final one-line result summary.
 
 ---
@@ -37,12 +41,6 @@ Key goals:
 - macOS managed endpoint
 - Root execution context (typical MDM script execution)
 - Network path reachable to your SMB server
-- Optional for Finder sidebar automation:
-  - `mysides` binary in:
-    - `/usr/local/bin/mysides` or `/opt/homebrew/bin/mysides`
-  - or Jamf-cached installer/binary:
-    - `/Library/Application Support/JAMF/Downloads/mysides.pkg`
-    - `/Library/Application Support/JAMF/Downloads/mysides`
 
 ---
 
@@ -94,8 +92,7 @@ Use for:
 2. Create policy with:
    - Trigger: Recurring Check-in or Self Service
    - Execution Frequency: Once per computer (for initial) or Ongoing (for remediation)
-3. If using Finder sidebar support, ensure `mysides` is installed/cached before script step.
-4. Recommended arguments:
+3. Recommended arguments:
    - Fleet automation: `--non-interactive --no-ui`
    - User-initiated: `--interactive --ui`
 
@@ -142,40 +139,7 @@ RESULT: mount=<ok|fail|skip> desktop=<ok|warn|skip> sidebar=<ok|warn|skip> dock=
 - Script does **not** log passwords.
 - Script avoids destructive `rm -rf` behavior on user Desktop path.
 - Interactive fallback may still require credential material for SMB URL auth path due to platform tooling behavior.
-- Prefer enterprise SSO/cached credentials for true zero-touch operation.
-
----
-
-## Testing Evidence
-
-### Functional validation completed locally
-- Syntax and script flow validated.
-- Idempotency and safety logic reviewed.
-
-### Remote VM validation
-- Target provided: `192.168.8.27`
-- SSH authentication with provided credentials (`admin/admin`) was **not successful** from this environment.
-- Because of that, full remote execution evidence is pending access confirmation.
-
-Recommended quick test commands on VM once credentials/access are confirmed:
-
-```bash
-sudo bash smb-mount-mdm.sh --non-interactive --no-ui
-echo $?
-log show --last 5m --predicate 'process == "bash"' --style compact
-cat "/Library/Application Support/Script Logs/smb-mount-mdm/smb-mount-mdm.log"
-```
-
----
-
-## Troubleshooting
-
-- **Exit 30**: no valid credentials in non-interactive mode
-  - Verify SSO/keychain state or use `--interactive` in user-driven flow.
-- **Exit 31/32**: mount failed/mismatch
-  - Verify DNS, share permissions, SMB path values, network reachability.
-- **Sidebar skipped/warn**
-  - Verify `mysides` availability and GUI user session.
+- Prefer enterprise SSO/cached credentials for zero-touch operation.
 
 ---
 
@@ -183,7 +147,7 @@ cat "/Library/Application Support/Script Logs/smb-mount-mdm/smb-mount-mdm.log"
 
 | Version | Date       | Notes |
 |--------:|------------|-------|
-| v1.0.0  | 2026-04-01 | Initial enterprise-ready release with non-interactive default, deterministic exit codes, safer Desktop handling, and improved mount verification. |
+| v1.0.0  | 2026-04-01 | Initial enterprise-ready release with deterministic exit codes, safer Desktop handling, improved mount verification, and robust `mysides` installation fallback support. |
 
 ---
 
