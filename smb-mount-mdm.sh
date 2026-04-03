@@ -262,6 +262,15 @@ sanitize_mount_output() {
   printf '%s' "$1" | /usr/bin/sed -E 's#//([^/@]+;)?[^:@/]+:[^@/]+@#//\1***:***@#g'
 }
 
+path_to_file_url() {
+  local path="$1"
+  RAW_PATH="$path" /usr/bin/python3 - <<'PY'
+import os, urllib.parse
+p = os.environ['RAW_PATH']
+print('file://' + urllib.parse.quote(p, safe='/'))
+PY
+}
+
 smb_user_principal() {
   local smb_user="$1"
   if [[ -n "$DOMAIN" ]]; then
@@ -469,6 +478,7 @@ create_desktop_link() {
  
 configure_finder_sidebar() {
   local mysides_bin="$1"
+  local sidebar_url
  
   if [[ "$ENABLE_UI_CUSTOMIZATIONS" != "true" ]]; then
     RESULT_SIDEBAR="skip"
@@ -480,9 +490,11 @@ configure_finder_sidebar() {
     RESULT_SIDEBAR="warn"
     return 1
   fi
+
+  sidebar_url="$(path_to_file_url "$MOUNT_POINT")"
  
   run_as_user "$mysides_bin" remove "$DISPLAY_NAME" >/dev/null 2>&1 || true
-  run_as_user "$mysides_bin" add "$DISPLAY_NAME" "file://${MOUNT_POINT}" >/dev/null 2>&1
+  run_as_user "$mysides_bin" add "$DISPLAY_NAME" "$sidebar_url" >/dev/null 2>&1
  
   if [[ $? -eq 0 ]]; then
     RESULT_SIDEBAR="ok"
