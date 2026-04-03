@@ -42,6 +42,7 @@ For Azure NetApp Files SMB, configure:
 - Optional bootstrap credentials for first non-interactive run.
 - Optional interactive prompt mode for user-assisted runs.
 - Optional Finder/Dock/Desktop customization.
+- Finder sidebar entry uses a properly URL-encoded `file://` path (handles spaces in volume names).
 - Automatic `mysides` installation support:
   - existing binary (`/usr/local/bin` or `/opt/homebrew/bin`)
   - Jamf cached package/binary
@@ -170,6 +171,7 @@ RESULT: mount=<ok|fail|skip> desktop=<ok|warn|skip> sidebar=<ok|warn|skip> dock=
 - Passwords are not logged.
 - Mount error output is sanitized before logging.
 - Script avoids destructive Desktop operations.
+- macOS may show a keychain permission/update prompt when an existing SMB keychain item is updated (`security ... -U`).
 - Default recommendation remains non-interactive MDM flow with optional one-time bootstrap credentials.
 
 ---
@@ -178,7 +180,7 @@ RESULT: mount=<ok|fail|skip> desktop=<ok|warn|skip> sidebar=<ok|warn|skip> dock=
 
 | Version | Date       | Notes |
 |--------:|------------|-------|
-| v2.1.0  | 2026-04-03 | Added separate SMB identity support, bootstrap creds flags, optional domain override, explicit login-keychain handling, non-interactive mount behavior (`-N`), host/share verification hardening, and sanitized mount error logging. |
+| v2.1.0  | 2026-04-03 | Added separate SMB identity support, bootstrap creds flags, optional domain override, explicit login-keychain handling, non-interactive mount behavior (`-N`), host/share verification hardening, sanitized mount error logging, and URL-encoded Finder sidebar path handling. |
 | v1.0.0  | 2026-04-01 | Initial enterprise-ready release with deterministic exit codes, safer Desktop handling, improved mount verification, and robust `mysides` installation fallback support. |
 
 ---
